@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken')
-const { User } = require("../models")
+const { User,Role } = require("../models")
 
 exports.authMiddleware = async(req,res,next) => {
  // 1) Fungsi Jika diheader kita masukan token atau tidak
@@ -29,8 +29,30 @@ exports.authMiddleware = async(req,res,next) => {
 
    // 3) Ambil Data User Berdasarkan Kondisi Decodenya
    const currentUser = await User.findByPk(decode.id)
+   if(!currentUser) {
+      return next(res.status(401).json({
+         message : "User Not Found and Token cant be Used Again!",
+         status : 401,
+      }))
+   }
    console.log(currentUser)
 
-   req.user
+   req.user = currentUser
    next()
+}
+
+exports.permissionMiddleware = (...roles) => {
+   return async(req,res,next) => {
+      const rolesData = await Role.findByPk(req.user.role_id)
+
+      const roleName = rolesData.name
+      if(!roles.includes(roleName)) {
+         return next(res.status(403).json({
+            status :403,
+            error : "Anda Tidak Dapat Mengakses URL Ini!"
+         }))
+      }
+
+      next()
+   }
 }

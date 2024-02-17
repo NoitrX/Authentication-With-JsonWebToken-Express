@@ -1,3 +1,4 @@
+
 const { User } = require("../models");
 const jwt = require("jsonwebtoken");
 const signToken = id => {
@@ -5,6 +6,25 @@ const signToken = id => {
     expiresIn: process.env.JWT_EXPIRES_IN,
   });
 };
+
+const createSendToken = (user,statusCode, res) => {
+  const token = signToken(user.id)
+  const cookieOption = {
+    expire : new Date(
+      Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
+    ),
+    httpOnly : true
+  }
+  res.cookie("jwt", token, cookieOption)
+
+  user.password = undefined
+  res.status(statusCode).json( {
+    status : "Success",
+    token,
+    data : user
+  })
+}
+
 exports.registerUser = async (req, res) => {
   try {
     if (req.body.password != req.body.passwordConfirm) {
@@ -19,13 +39,7 @@ exports.registerUser = async (req, res) => {
       password: req.body.password,
     });
 
-    const token = signToken(newUser.id);
-
-    return res.status(201).json({
-      message: "Register Berhasil",
-      token,
-      data: newUser,
-    });
+   createSendToken(newUser, 201, res)
   } catch (error) {
     console.log(error, 'i');
     return res.status(400).json({
@@ -60,11 +74,5 @@ exports.loginUser = async (req, res) => {
   }
 
   //token Res login
-  const token = signToken(userData.id);
-
-  return res.status(200).json({
-    status: "success",
-    message: "Login Successfully",
-    token,
-  });
+  createSendToken(userData, 200, res)
 };
