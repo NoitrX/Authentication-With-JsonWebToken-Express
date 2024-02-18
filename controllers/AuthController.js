@@ -74,3 +74,29 @@ exports.loginUser = async (req, res) => {
   //token Res login
   createSendToken(userData, 200, res)
 };
+
+
+exports.logoutUser = async (req, res) => {
+  res.cookie('jwt', '', {
+    httpOnly: true,
+    expires : new Date(0)
+  })
+  res.status(200).json({
+    message : " Logout Success"
+  })
+}
+
+exports.getMyUser = async (req, res) => {
+  const currentUser = await User.findByPk(req.user.id)
+  if(currentUser) {
+    return res.status(200).json({
+      id: currentUser.id,
+      name : currentUser.name,
+      email: currentUser.email,
+      role_id: currentUser.role_id
+    })
+  }
+  return res.status(404).json({
+    message: "User Not Found"
+  })
+}
