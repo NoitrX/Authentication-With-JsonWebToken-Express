@@ -1,4 +1,3 @@
-
 const { User } = require("../models");
 const jwt = require("jsonwebtoken");
 const signToken = id => {
@@ -20,7 +19,6 @@ const createSendToken = (user,statusCode, res) => {
   user.password = undefined
   res.status(statusCode).json( {
     status : "Success",
-    token,
     data : user
   })
 }
